@@ -18,6 +18,7 @@ let nextLink = '';
 searchInput.addEventListener('keydown', handleSearchKeyDown);
 searchInput.addEventListener('input', handleSearchInput);
 document.getElementById('load-btn').addEventListener('click', () => loadPatients());
+document.getElementById('back-btn').addEventListener('click', resetView)
 loadMoreBtn.addEventListener('click', () => loadPatients(true));
 
 // Event Handlers
@@ -146,4 +147,11 @@ async function loadPatientObservations(patientId) {
         console.error(err);
         obsSection.hidden = true;
     }
+}
+
+function resetView() {
+    detailSection.hidden = true
+    obsSection.hidden = true
+    detailContent.textContent = ''
+    obsList.innerHTML = ''
 }
