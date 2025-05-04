@@ -1,40 +1,113 @@
-table {
-  width: 100%;
-  border-collapse: collapse;
+:root {
+  --bg: #f9f9fb;
+  --primary: #1976d2;
+  --accent: #e3f2fd;
+  --text: #333;
+  --card: #fff;
+  --border: #ddd;
+  --error: #d32f2f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  padding: 1rem;
+}
+
+h1, h2 {
+  color: var(--primary);
   margin-bottom: 1rem;
+  text-align: center;
 }
 
-th, td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  text-align: left;
-  font-size: 0.9rem;
+.search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 600px) {
-  table, thead, tbody, th, td, tr {
-    display: block;
+input[type="text"] {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+button {
+  padding: 0.6rem 1rem;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #1565c0;
+}
+
+.card-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  padding: 1rem;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.error-msg {
+  color: var(--error);
+  text-align: center;
+  font-weight: bold;
+  margin-top: 1rem;
+}
+
+@media (min-width: 600px) {
+  .card-container {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 
-  tr {
-    margin-bottom: 1rem;
+  .search-bar {
+    flex-wrap: nowrap;
   }
+}
 
-  th {
-    display: none;
-  }
+#load-more-btn,
+#back-btn {
+  margin: 1rem 0;
+}
 
-  td {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem;
-    border: none;
-    border-bottom: 1px solid #ccc;
-  }
+.container {
+  max-width: 80%;
+  margin: 2rem auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+}
 
-  td::before {
-    content: attr(data-label);
-    font-weight: bold;
-    margin-right: 1rem;
+@media (max-width: 768px) {
+  .container {
+    max-width: 95%;
+    padding: 1rem;
   }
 }

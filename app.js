@@ -65,16 +65,16 @@ function renderPatientList(patients) {
       const gender = patient.gender || 'N/A'
       const id = patient.id
   
-      const tr = document.createElement('tr')
-      tr.style.cursor = 'pointer'
-      tr.addEventListener('click', () => loadPatientDetail(id))
-  
-      tr.innerHTML = `
-        <td data-label="Nombre">${name}</td>
-        <td data-label="Género">${gender}</td>
-        <td data-label="ID">${id}</td>
+      const card = document.createElement('div')
+      card.className = 'card'
+      card.style.cursor = 'pointer'
+      card.addEventListener('click', () => loadPatientDetail(id))
+      card.innerHTML = `
+        <strong>${name}</strong><br/>
+        Género: ${gender}<br/>
+        ID: ${id}
       `
-      list.appendChild(tr)
+      list.appendChild(card)
     })
   }
 
@@ -118,36 +118,37 @@ async function loadPatientDetail(id) {
     }
 }
 
-async function loadPatientObservations(patientId) {
-    try {
-        const response = await fetch(`https://hapi.fhir.org/baseR4/Observation?subject=Patient/${patientId}&_count=10`);
-        if (!response.ok) throw new Error('No se pudieron cargar las observaciones');
-
-        const data = await response.json();
-        const observations = data.entry || [];
-
+function loadPatientObservations(patientId) {
+    fetch(`https://hapi.fhir.org/baseR4/Observation?subject=Patient/${patientId}&_count=10`)
+      .then(response => {
+        if (!response.ok) throw new Error('No se pudieron cargar las observaciones')
+        return response.json()
+      })
+      .then(data => {
+        const observations = data.entry || []
         obsList.innerHTML = ''
         observations.forEach(entry => {
-        const obs = entry.resource
-        const code = obs.code?.text || 'Sin descripción'
-        const value = obs.valueQuantity?.value + ' ' + obs.valueQuantity?.unit || 'Sin valor'
-        const date = obs.effectiveDateTime || 'Sin fecha'
-
-        const tr = document.createElement('tr')
-        tr.innerHTML = `
-            <td data-label="Observación">${code}</td>
-            <td data-label="Valor">${value}</td>
-            <td data-label="Fecha">${date}</td>
-        `
-        obsList.appendChild(tr)
+          const obs = entry.resource
+          const code = obs.code?.text || 'Sin descripción'
+          const value = obs.valueQuantity?.value + ' ' + obs.valueQuantity?.unit || 'Sin valor'
+          const date = obs.effectiveDateTime || 'Sin fecha'
+  
+          const card = document.createElement('div')
+          card.className = 'card'
+          card.innerHTML = `
+            <strong>${code}</strong><br/>
+            Valor: ${value}<br/>
+            Fecha: ${date}
+          `
+          obsList.appendChild(card)
         })
-
-        obsSection.hidden = false;
-    } catch (err) {
-        console.error(err);
-        obsSection.hidden = true;
-    }
-}
+        obsSection.hidden = false
+      })
+      .catch(err => {
+        console.error(err)
+        obsSection.hidden = true
+      })
+  }
 
 function resetView() {
     detailSection.hidden = true

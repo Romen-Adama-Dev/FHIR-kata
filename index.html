@@ -7,41 +7,31 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main>
-    <h1>Pacientes desde FHIR</h1>
-    <input type="text" id="search-input" placeholder="Buscar por nombre" />
-    <button id="load-btn">Cargar Pacientes</button>
-    <table id="patient-list-table">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Género</th>
-            <th>ID</th>
-          </tr>
-        </thead>
-        <tbody id="patient-list"></tbody>
-      </table>
-    <button id="load-more-btn" hidden>Cargar más</button>
-    <section id="patient-detail" hidden>
-        <h2>Detalle del Paciente</h2>
-        <button id="back-btn">Volver al listado</button>
-        <p id="detail-content"></p>
-      </section>
-    <p id="error-msg" hidden>Error al cargar los pacientes</p>
-    <section id="observations" hidden>
-        <h2>Observaciones Clínicas</h2>
-        <table id="observation-list-table">
-            <thead>
-              <tr>
-                <th>Observación</th>
-                <th>Valor</th>
-                <th>Fecha</th>
-              </tr>
-            </thead>
-            <tbody id="observation-list"></tbody>
-          </table>
-    </section>
-  </main>
-  <script src="app.js"></script>
-</body>
+    <div class="container">
+      <main>
+        <h1>👩‍⚕️ Lista de Pacientes (FHIR)</h1>
+        <div class="search-bar">
+          <input type="text" id="search-input" placeholder="🔍 Buscar por nombre" />
+          <button id="load-btn">Buscar</button>
+        </div>
+  
+        <div id="patient-list" class="card-container"></div>
+        <button id="load-more-btn" hidden>Cargar más pacientes</button>
+  
+        <section id="patient-detail" hidden>
+          <h2>📋 Detalle del Paciente</h2>
+          <button id="back-btn">⬅️ Volver al listado</button>
+          <div id="detail-content" class="card"></div>
+        </section>
+  
+        <p id="error-msg" hidden class="error-msg">⚠️ Error al cargar los pacientes</p>
+  
+        <section id="observations" hidden>
+          <h2>📊 Observaciones Clínicas</h2>
+          <div id="observation-list" class="card-container"></div>
+        </section>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
 </html>
