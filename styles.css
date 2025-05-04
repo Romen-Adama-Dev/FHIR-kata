@@ -1,0 +1,19 @@
+body {
+    font-family: sans-serif;
+    padding: 1rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  li {
+    margin-bottom: 0.5rem;
+  }
