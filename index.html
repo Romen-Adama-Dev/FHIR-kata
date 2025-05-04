@@ -1,52 +1,91 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kata FHIR</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kata FHIR</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
     <div class="container">
-      <main>
-        <h1>👩‍⚕️ Lista de Pacientes (FHIR)</h1>
-        <div class="search-bar">
-          <input type="text" id="search-input" placeholder="🔍 Buscar por nombre" />
-          <button id="load-btn">Buscar</button>
-        </div>
-  
-        <div id="patient-list" class="card-container"></div>
-        <button id="load-more-btn" hidden>Cargar más pacientes</button>
-  
-        <section id="patient-detail" hidden>
-          <h2>📋 Detalle del Paciente</h2>
-          <button id="back-btn">⬅️ Volver al listado</button>
-          <div id="detail-content" class="card"></div>
-        </section>
-  
-        <p id="error-msg" hidden class="error-msg">⚠️ Error al cargar los pacientes</p>
-  
-        <section id="observations" role="region" aria-label="Observaciones Clínicas" hidden>
-          <h2>📊 Observaciones Clínicas</h2>
-          <div id="observation-list" class="card-container"></div>
-        </section>
+        <main>
+            <!-- Título principal -->
+            <h1>👩‍⚕️ Lista de Pacientes (FHIR)</h1>
 
-        <section id="encounters" hidden>
-            <h2>🏥 Encuentros Clínicos</h2>
-            <div id="encounter-list" class="card-container"></div>
-        </section>
+            <!-- Barra de búsqueda -->
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="🔍 Buscar por nombre" />
+                <button id="load-btn">Buscar</button>
+            </div>
 
-        <section id="conditions" hidden>
-            <h2>🩺 Condiciones Clínicas</h2>
-            <div id="condition-list" class="card-container"></div>
-        </section>
+            <!-- Lista de pacientes -->
+            <div id="patient-list" class="card-container"></div>
+            <button id="load-more-btn" hidden>Cargar más pacientes</button>
 
-        <section id="medications" hidden>
-            <h2>💊 Medicaciones</h2>
-            <div id="medication-list" class="card-container"></div>
-        </section>
-      </main>
+            <!-- Detalle del paciente -->
+            <section id="patient-detail" hidden>
+                <h2>📋 Detalle del Paciente</h2>
+                <div class="button-group">
+                    <button id="back-btn">⬅️ Volver al listado</button>
+                    <button id="export-btn">📄 Exportar resumen</button>
+                    <button id="export-pdf-btn">🖨️ Exportar PDF</button>
+                </div>
+                <div id="detail-content" class="card"></div>
+            </section>
+
+            <!-- Mensaje de error -->
+            <p id="error-msg" hidden class="error-msg">⚠️ Error al cargar los pacientes</p>
+
+            <!-- Secciones adicionales -->
+            <section id="observations" role="region" aria-label="Observaciones Clínicas" hidden>
+                <h2>📊 Observaciones Clínicas</h2>
+                <div id="observation-list" class="card-container"></div>
+            </section>
+
+            <section id="encounters" hidden>
+                <h2>🏥 Encuentros Clínicos</h2>
+                <div id="encounter-list" class="card-container"></div>
+            </section>
+
+            <section id="conditions" hidden>
+                <h2>🩺 Condiciones Clínicas</h2>
+                <div id="condition-list" class="card-container"></div>
+            </section>
+
+            <section id="medications" hidden>
+                <h2>💊 Medicaciones</h2>
+                <div id="medication-list" class="card-container"></div>
+            </section>
+
+            <section id="allergies" hidden>
+                <h2>⚠️ Alergias e Intolerancias</h2>
+                <div id="allergy-list" class="card-container"></div>
+            </section>
+
+            <section id="immunizations" hidden>
+                <h2>💉 Vacunación</h2>
+                <div id="immunization-list" class="card-container"></div>
+            </section>
+
+            <section id="reports" hidden>
+                <h2>🧪 Informes Diagnósticos</h2>
+                <div id="report-list" class="card-container"></div>
+            </section>
+
+            <section id="procedures" hidden>
+                <h2>🛠️ Procedimientos Médicos</h2>
+                <div id="procedure-list" class="card-container"></div>
+            </section>
+
+            <section id="careplans" hidden>
+                <h2>📝 Planes de Atención</h2>
+                <div id="careplan-list" class="card-container"></div>
+            </section>
+        </main>
     </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
-  </body>
+</body>
 </html>
