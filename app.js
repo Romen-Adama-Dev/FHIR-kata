@@ -1,96 +1,140 @@
-const API_URL = 'https://hapi.fhir.org/baseR4/Patient'
-const list = document.getElementById('patient-list')
-const errorMsg = document.getElementById('error-msg')
-const searchInput = document.getElementById('search-input')
+const API_URL = 'https://hapi.fhir.org/baseR4/Patient';
 
-let debounceTimeout
+// DOM Elements
+const list = document.getElementById('patient-list');
+const errorMsg = document.getElementById('error-msg');
+const searchInput = document.getElementById('search-input');
+const loadMoreBtn = document.getElementById('load-more-btn');
+const detailSection = document.getElementById('patient-detail');
+const detailContent = document.getElementById('detail-content');
+const obsSection = document.getElementById('observations')
+const obsList = document.getElementById('observation-list')
 
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    clearTimeout(debounceTimeout)
-    loadPatients()
-  }
-})
+// State
+let debounceTimeout;
+let nextLink = '';
 
-searchInput.addEventListener('input', () => {
-  clearTimeout(debounceTimeout)
-  debounceTimeout = setTimeout(() => {
-    loadPatients()
-  }, 400)
-})
+// Event Listeners
+searchInput.addEventListener('keydown', handleSearchKeyDown);
+searchInput.addEventListener('input', handleSearchInput);
+document.getElementById('load-btn').addEventListener('click', () => loadPatients());
+loadMoreBtn.addEventListener('click', () => loadPatients(true));
 
-document.getElementById('load-btn').addEventListener('click', loadPatients)
-
-async function fetchPatients(name = '') {
-  const url = name 
-    ? `${API_URL}?name=${encodeURIComponent(name)}&_count=10`
-    : `${API_URL}?_count=10`
-
-  const response = await fetch(url)
-  if (!response.ok) throw new Error('Error al obtener los pacientes')
-  const data = await response.json()
-  return data.entry || []
+// Event Handlers
+function handleSearchKeyDown(e) {
+    if (e.key === 'Enter') {
+        clearTimeout(debounceTimeout);
+        loadPatients();
+    }
 }
 
+function handleSearchInput() {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+        loadPatients();
+    }, 400);
+}
+
+// API Functions
+async function fetchPatients(name = '', url = '') {
+    const fetchUrl = url || (name ? `${API_URL}?name=${encodeURIComponent(name)}&_count=10` : `${API_URL}?_count=10`);
+    
+    const response = await fetch(fetchUrl);
+    if (!response.ok) throw new Error('Error al obtener los pacientes');
+    
+    const data = await response.json();
+    nextLink = data.link?.find(l => l.relation === 'next')?.url || '';
+    loadMoreBtn.hidden = !nextLink;
+
+    return data.entry || [];
+}
+
+async function fetchPatientDetail(id) {
+    const response = await fetch(`${API_URL}/${id}`);
+    if (!response.ok) throw new Error('No se pudo cargar el detalle');
+    return response.json();
+}
+
+// Rendering Functions
 function renderPatientList(patients) {
-  list.innerHTML = ''
-  patients.forEach(entry => {
-    const patient = entry.resource
-    const name = patient.name?.[0]?.given?.join(' ') + ' ' + patient.name?.[0]?.family || 'Nombre desconocido'
-    const gender = patient.gender || 'N/A'
-    const id = patient.id
-    const li = document.createElement('li')
-    li.textContent = `${name} (${gender}) - ID: ${id}`
-    list.appendChild(li)
-  })
+    list.innerHTML = '';
+    patients.forEach(entry => {
+        const patient = entry.resource;
+        const name = formatPatientName(patient);
+        const gender = patient.gender || 'N/A';
+        const id = patient.id;
+
+        const li = document.createElement('li');
+        li.textContent = `${name} (${gender}) - ID: ${id}`;
+        li.style.cursor = 'pointer';
+        li.addEventListener('click', () => loadPatientDetail(id));
+        list.appendChild(li);
+    });
 }
 
-async function loadPatients() {
-  errorMsg.hidden = true
-  const name = searchInput.value.trim()
+function renderPatientDetail(patient) {
+    const name = formatPatientName(patient);
+    const gender = patient.gender || 'N/A';
+    const birth = patient.birthDate || 'Desconocido';
 
-  try {
-    const patients = await fetchPatients(name)
-    renderPatientList(patients)
-  } catch (error) {
-    console.error(error)
-    errorMsg.hidden = false
-  }
+    detailContent.textContent = `Nombre: ${name} | Género: ${gender} | Nacimiento: ${birth} | ID: ${patient.id}`;
+    detailSection.hidden = false;
 }
 
-const detailSection = document.getElementById('patient-detail')
-const detailContent = document.getElementById('detail-content')
+// Utility Functions
+function formatPatientName(patient) {
+    return patient.name?.[0]?.given?.join(' ') + ' ' + patient.name?.[0]?.family || 'Nombre desconocido';
+}
 
-function renderPatientList(patients) {
-  list.innerHTML = ''
-  patients.forEach(entry => {
-    const patient = entry.resource
-    const name = patient.name?.[0]?.given?.join(' ') + ' ' + patient.name?.[0]?.family || 'Nombre desconocido'
-    const gender = patient.gender || 'N/A'
-    const id = patient.id
+// Main Functions
+async function loadPatients(useNext = false) {
+    errorMsg.hidden = true;
+    const name = searchInput.value.trim();
 
-    const li = document.createElement('li')
-    li.textContent = `${name} (${gender}) - ID: ${id}`
-    li.style.cursor = 'pointer'
-    li.addEventListener('click', () => loadPatientDetail(id))
-    list.appendChild(li)
-  })
+    try {
+        const patients = await fetchPatients(name, useNext ? nextLink : '');
+        if (!useNext) list.innerHTML = '';
+        renderPatientList(patients);
+    } catch (error) {
+        console.error(error);
+        errorMsg.hidden = false;
+    }
 }
 
 async function loadPatientDetail(id) {
-  try {
-    const response = await fetch(`${API_URL}/${id}`)
-    if (!response.ok) throw new Error('No se pudo cargar el detalle')
+    try {
+        const patient = await fetchPatientDetail(id);
+        renderPatientDetail(patient);
+        await loadPatientObservations(id);
+    } catch (err) {
+        console.error(err);
+        detailSection.hidden = true;
+    }
+}
 
-    const patient = await response.json()
-    const name = patient.name?.[0]?.given?.join(' ') + ' ' + patient.name?.[0]?.family || 'Nombre desconocido'
-    const gender = patient.gender || 'N/A'
-    const birth = patient.birthDate || 'Desconocido'
+async function loadPatientObservations(patientId) {
+    try {
+        const response = await fetch(`https://hapi.fhir.org/baseR4/Observation?subject=Patient/${patientId}&_count=10`);
+        if (!response.ok) throw new Error('No se pudieron cargar las observaciones');
 
-    detailContent.textContent = `Nombre: ${name} | Género: ${gender} | Nacimiento: ${birth} | ID: ${patient.id}`
-    detailSection.hidden = false
-  } catch (err) {
-    console.error(err)
-    detailSection.hidden = true
-  }
+        const data = await response.json();
+        const observations = data.entry || [];
+
+        obsList.innerHTML = '';
+        observations.forEach(entry => {
+            const obs = entry.resource;
+            const code = obs.code?.text || 'Sin descripción';
+            const value = obs.valueQuantity?.value + ' ' + obs.valueQuantity?.unit || 'Sin valor';
+            const date = obs.effectiveDateTime || 'Sin fecha';
+
+            const li = document.createElement('li');
+            li.textContent = `${code} → ${value} (${date})`;
+            obsList.appendChild(li);
+        });
+
+        obsSection.hidden = false;
+    } catch (err) {
+        console.error(err);
+        obsSection.hidden = true;
+    }
 }

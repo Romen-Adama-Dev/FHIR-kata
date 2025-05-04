@@ -12,11 +12,16 @@
     <input type="text" id="search-input" placeholder="Buscar por nombre" />
     <button id="load-btn">Cargar Pacientes</button>
     <ul id="patient-list"></ul>
+    <button id="load-more-btn" hidden>Cargar más</button>
     <section id="patient-detail" hidden>
         <h2>Detalle del Paciente</h2>
         <p id="detail-content"></p>
       </section>
     <p id="error-msg" hidden>Error al cargar los pacientes</p>
+    <section id="observations" hidden>
+        <h2>Observaciones Clínicas</h2>
+        <ul id="observation-list"></ul>
+    </section>
   </main>
   <script src="app.js"></script>
 </body>
