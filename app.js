@@ -1,3 +1,4 @@
+// Constants
 const API_URL = 'https://hapi.fhir.org/baseR4/Patient';
 
 // DOM Elements
@@ -7,12 +8,14 @@ const searchInput = document.getElementById('search-input');
 const loadMoreBtn = document.getElementById('load-more-btn');
 const detailSection = document.getElementById('patient-detail');
 const detailContent = document.getElementById('detail-content');
-const obsSection = document.getElementById('observations')
-const obsList = document.getElementById('observation-list')
-const encSection = document.getElementById('encounters')
-const encList = document.getElementById('encounter-list')
-const condSection = document.getElementById('conditions')
-const condList = document.getElementById('condition-list')
+const obsSection = document.getElementById('observations');
+const obsList = document.getElementById('observation-list');
+const encSection = document.getElementById('encounters');
+const encList = document.getElementById('encounter-list');
+const condSection = document.getElementById('conditions');
+const condList = document.getElementById('condition-list');
+const medSection = document.getElementById('medications');
+const medList = document.getElementById('medication-list');
 
 // State
 let debounceTimeout;
@@ -22,7 +25,7 @@ let nextLink = '';
 searchInput.addEventListener('keydown', handleSearchKeyDown);
 searchInput.addEventListener('input', handleSearchInput);
 document.getElementById('load-btn').addEventListener('click', () => loadPatients());
-document.getElementById('back-btn').addEventListener('click', resetView)
+document.getElementById('back-btn').addEventListener('click', resetView);
 loadMoreBtn.addEventListener('click', () => loadPatients(true));
 
 // Event Handlers
@@ -40,13 +43,24 @@ function handleSearchInput() {
     }, 400);
 }
 
+// Utility Functions
+function formatPatientName(patient) {
+    const given = patient.name?.[0]?.given?.join(' ') || ''
+    const family = patient.name?.[0]?.family || ''
+    const fullName = `${given} ${family}`.trim()
+    return fullName || 'Nombre desconocido'
+}
+
+function showLoading(target) {
+    target.innerHTML = '<p>Cargando...</p>'
+}
+
 // API Functions
 async function fetchPatients(name = '', url = '') {
     const fetchUrl = url || (name ? `${API_URL}?name=${encodeURIComponent(name)}&_count=10` : `${API_URL}?_count=10`);
-    
     const response = await fetch(fetchUrl);
     if (!response.ok) throw new Error('Error al obtener los pacientes');
-    
+
     const data = await response.json();
     nextLink = data.link?.find(l => l.relation === 'next')?.url || '';
     loadMoreBtn.hidden = !nextLink;
@@ -62,25 +76,25 @@ async function fetchPatientDetail(id) {
 
 // Rendering Functions
 function renderPatientList(patients) {
-    list.innerHTML = ''
+    list.innerHTML = '';
     patients.forEach(entry => {
-      const patient = entry.resource
-      const name = formatPatientName(patient)
-      const gender = patient.gender || 'N/A'
-      const id = patient.id
-  
-      const card = document.createElement('div')
-      card.className = 'card'
-      card.style.cursor = 'pointer'
-      card.addEventListener('click', () => loadPatientDetail(id))
-      card.innerHTML = `
-        <strong>${name}</strong><br/>
-        Género: ${gender}<br/>
-        ID: ${id}
-      `
-      list.appendChild(card)
-    })
-  }
+        const patient = entry.resource;
+        const name = formatPatientName(patient);
+        const gender = patient.gender || 'N/A';
+        const id = patient.id;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => loadPatientDetail(id));
+        card.innerHTML = `
+            <strong>${name}</strong><br/>
+            Género: ${gender}<br/>
+            ID: ${id}
+        `;
+        list.appendChild(card);
+    });
+}
 
 function renderPatientDetail(patient) {
     const name = formatPatientName(patient);
@@ -89,11 +103,6 @@ function renderPatientDetail(patient) {
 
     detailContent.textContent = `Nombre: ${name} | Género: ${gender} | Nacimiento: ${birth} | ID: ${patient.id}`;
     detailSection.hidden = false;
-}
-
-// Utility Functions
-function formatPatientName(patient) {
-    return patient.name?.[0]?.given?.join(' ') + ' ' + patient.name?.[0]?.family || 'Nombre desconocido';
 }
 
 // Main Functions
@@ -115,119 +124,195 @@ async function loadPatientDetail(id) {
     try {
         const patient = await fetchPatientDetail(id);
         renderPatientDetail(patient);
-        await loadPatientObservations(id);
-        await loadPatientObservations(id);
-        await loadPatientEncounters(id);
-        await loadPatientObservations(id);
-        await loadPatientEncounters(id);
-        await loadPatientConditions(id);
+
+        await Promise.all([
+            loadPatientObservations(id),
+            loadPatientEncounters(id),
+            loadPatientConditions(id),
+            loadPatientMedications(id)
+        ]);
     } catch (err) {
         console.error(err);
         detailSection.hidden = true;
     }
 }
 
+// Observations
 function loadPatientObservations(patientId) {
+    showLoading(obsList);
     fetch(`https://hapi.fhir.org/baseR4/Observation?subject=Patient/${patientId}&_count=10`)
-      .then(response => {
-        if (!response.ok) throw new Error('No se pudieron cargar las observaciones')
-        return response.json()
-      })
-      .then(data => {
-        const observations = data.entry || []
-        obsList.innerHTML = ''
-        observations.forEach(entry => {
-          const obs = entry.resource
-          const code = obs.code?.text || 'Sin descripción'
-          const value = obs.valueQuantity?.value + ' ' + obs.valueQuantity?.unit || 'Sin valor'
-          const date = obs.effectiveDateTime || 'Sin fecha'
-  
-          const card = document.createElement('div')
-          card.className = 'card'
-          card.innerHTML = `
-            <strong>${code}</strong><br/>
-            Valor: ${value}<br/>
-            Fecha: ${date}
-          `
-          obsList.appendChild(card)
+        .then(response => {
+            if (!response.ok) throw new Error('No se pudieron cargar las observaciones');
+            return response.json();
         })
-        obsSection.hidden = false
-      })
-      .catch(err => {
-        console.error(err)
-        obsSection.hidden = true
-      })
-  }
+        .then(data => {
+            const observations = data.entry || [];
+            obsList.innerHTML = '';
+            if (observations.length === 0) {
+                obsList.innerHTML = '<p>No hay observaciones disponibles.</p>';
+                obsSection.hidden = false;
+                return;
+            }
+            observations.forEach(entry => {
+                const obs = entry.resource;
+                const code = obs.code?.text || 'Sin descripción';
+                const value = obs.valueQuantity
+                    ? `${obs.valueQuantity.value} ${obs.valueQuantity.unit || ''}`.trim()
+                    : 'Sin valor';
+                const date = obs.effectiveDateTime || 'Sin fecha';
 
-function resetView() {
-    detailSection.hidden = true
-    obsSection.hidden = true
-    detailContent.textContent = ''
-    obsList.innerHTML = ''
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <strong>${code}</strong><br/>
+                    Valor: ${value}<br/>
+                    Fecha: ${date}
+                `;
+                obsList.appendChild(card);
+            });
+            obsSection.hidden = false;
+        })
+        .catch(err => {
+            console.error(err);
+            obsSection.hidden = true;
+        });
 }
 
+// Encounters
 async function loadPatientEncounters(patientId) {
     try {
-      const response = await fetch(`https://hapi.fhir.org/baseR4/Encounter?subject=Patient/${patientId}&_count=10`)
-      if (!response.ok) throw new Error('No se pudieron cargar los encuentros')
-  
-      const data = await response.json()
-      const encounters = data.entry || []
-  
-      encList.innerHTML = ''
-      encounters.forEach(entry => {
-        const enc = entry.resource
-        const type = enc.type?.[0]?.text || 'Tipo desconocido'
-        const status = enc.status || 'Sin estado'
-        const start = enc.period?.start || 'Sin fecha'
-        const facility = enc.serviceProvider?.display || 'Centro no especificado'
-  
-        const card = document.createElement('div')
-        card.className = 'card'
-        card.innerHTML = `
-          <strong>${type}</strong><br/>
-          Estado: ${status}<br/>
-          Fecha: ${start}<br/>
-          Centro: ${facility}
-        `
-        encList.appendChild(card)
-      })
-  
-      encSection.hidden = false
-    } catch (err) {
-      console.error(err)
-      encSection.hidden = true
-    }
-  }
+        showLoading(encList);
+        const response = await fetch(`https://hapi.fhir.org/baseR4/Encounter?subject=Patient/${patientId}&_count=10`);
+        if (!response.ok) throw new Error('No se pudieron cargar los encuentros');
 
-  async function loadPatientConditions(patientId) {
-    try {
-      const response = await fetch(`https://hapi.fhir.org/baseR4/Condition?subject=Patient/${patientId}&_count=10`)
-      if (!response.ok) throw new Error('No se pudieron cargar las condiciones')
-  
-      const data = await response.json()
-      const conditions = data.entry || []
-  
-      condList.innerHTML = ''
-      conditions.forEach(entry => {
-        const cond = entry.resource
-        const code = cond.code?.text || 'Condición no especificada'
-        const status = cond.clinicalStatus?.text || 'Sin estado'
-        const onset = cond.onsetDateTime || 'Fecha desconocida'
-  
-        const card = document.createElement('div')
-        card.className = 'card'
-        card.innerHTML = `
-          <strong>${code}</strong><br/>
-          Estado: ${status}<br/>
-          Inicio: ${onset}
-        `
-        condList.appendChild(card)
-      })
-  
-      condSection.hidden = false
+        const data = await response.json();
+        const encounters = data.entry || [];
+        encList.innerHTML = '';
+
+        if (encounters.length === 0) {
+            encList.innerHTML = '<p>No hay encuentros disponibles.</p>';
+            encSection.hidden = false;
+            return;
+        }
+
+        encounters.forEach(entry => {
+            const enc = entry.resource;
+            const type = enc.type?.[0]?.text || 'Tipo desconocido';
+            const status = enc.status || 'Sin estado';
+            const start = enc.period?.start || 'Sin fecha';
+            const facility = enc.serviceProvider?.display || 'Centro no especificado';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <strong>${type}</strong><br/>
+                Estado: ${status}<br/>
+                Fecha: ${start}<br/>
+                Centro: ${facility}
+            `;
+            encList.appendChild(card);
+        });
+
+        encSection.hidden = false;
     } catch (err) {
-      console.error(err)
-      condSection.hidden = true
+        console.error(err);
+        encSection.hidden = true;
     }
-  }
+}
+
+// Conditions
+async function loadPatientConditions(patientId) {
+    try {
+        showLoading(condList);
+        const response = await fetch(`https://hapi.fhir.org/baseR4/Condition?subject=Patient/${patientId}&_count=10`);
+        if (!response.ok) throw new Error('No se pudieron cargar las condiciones');
+
+        const data = await response.json();
+        const conditions = data.entry || [];
+
+        condList.innerHTML = '';
+        if (conditions.length === 0) {
+            condList.innerHTML = '<p>No hay condiciones disponibles.</p>';
+            condSection.hidden = false;
+            return;
+        }
+
+        conditions.forEach(entry => {
+            const cond = entry.resource;
+            const code = cond.code?.text || 'Condición no especificada';
+            const status = cond.clinicalStatus?.text || 'Sin estado';
+            const onset = cond.onsetDateTime || 'Fecha desconocida';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <strong>${code}</strong><br/>
+                Estado: ${status}<br/>
+                Inicio: ${onset}
+            `;
+            condList.appendChild(card);
+        });
+
+        condSection.hidden = false;
+    } catch (err) {
+        console.error(err);
+        condSection.hidden = true;
+    }
+}
+
+// Medications
+async function loadPatientMedications(patientId) {
+    try {
+        showLoading(medList);
+        const response = await fetch(`https://hapi.fhir.org/baseR4/MedicationRequest?subject=Patient/${patientId}&_count=10`);
+        if (!response.ok) throw new Error('No se pudieron cargar las medicaciones');
+
+        const data = await response.json();
+        const meds = data.entry || [];
+
+        medList.innerHTML = '';
+        if (meds.length === 0) {
+            medList.innerHTML = '<p>No hay medicaciones disponibles.</p>';
+            medSection.hidden = false;
+            return;
+        }
+
+        meds.forEach(entry => {
+            const med = entry.resource;
+            const medication = med.medicationCodeableConcept?.text || 'Medicación no especificada';
+            const status = med.status || 'Sin estado';
+            const authored = med.authoredOn || 'Fecha desconocida';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <strong>${medication}</strong><br/>
+                Estado: ${status}<br/>
+                Recetado el: ${authored}
+            `;
+            medList.appendChild(card);
+        });
+
+        medSection.hidden = false;
+    } catch (err) {
+        console.error(err);
+        medSection.hidden = true;
+    }
+}
+
+// Reset View
+function resetView() {
+    detailSection.hidden = true;
+    obsSection.hidden = true;
+    encSection.hidden = true;
+    condSection.hidden = true;
+    medSection.hidden = true;
+
+    detailContent.textContent = '';
+    obsList.innerHTML = '';
+    encList.innerHTML = '';
+    condList.innerHTML = '';
+    medList.innerHTML = '';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}

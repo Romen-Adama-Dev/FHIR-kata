@@ -26,7 +26,7 @@
   
         <p id="error-msg" hidden class="error-msg">⚠️ Error al cargar los pacientes</p>
   
-        <section id="observations" hidden>
+        <section id="observations" role="region" aria-label="Observaciones Clínicas" hidden>
           <h2>📊 Observaciones Clínicas</h2>
           <div id="observation-list" class="card-container"></div>
         </section>
@@ -39,6 +39,11 @@
         <section id="conditions" hidden>
             <h2>🩺 Condiciones Clínicas</h2>
             <div id="condition-list" class="card-container"></div>
+        </section>
+
+        <section id="medications" hidden>
+            <h2>💊 Medicaciones</h2>
+            <div id="medication-list" class="card-container"></div>
         </section>
       </main>
     </div>
