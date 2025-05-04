@@ -9,6 +9,8 @@ const detailSection = document.getElementById('patient-detail');
 const detailContent = document.getElementById('detail-content');
 const obsSection = document.getElementById('observations')
 const obsList = document.getElementById('observation-list')
+const encSection = document.getElementById('encounters')
+const encList = document.getElementById('encounter-list')
 
 // State
 let debounceTimeout;
@@ -112,6 +114,8 @@ async function loadPatientDetail(id) {
         const patient = await fetchPatientDetail(id);
         renderPatientDetail(patient);
         await loadPatientObservations(id);
+        await loadPatientObservations(id)
+        await loadPatientEncounters(id)
     } catch (err) {
         console.error(err);
         detailSection.hidden = true;
@@ -156,3 +160,37 @@ function resetView() {
     detailContent.textContent = ''
     obsList.innerHTML = ''
 }
+
+async function loadPatientEncounters(patientId) {
+    try {
+      const response = await fetch(`https://hapi.fhir.org/baseR4/Encounter?subject=Patient/${patientId}&_count=10`)
+      if (!response.ok) throw new Error('No se pudieron cargar los encuentros')
+  
+      const data = await response.json()
+      const encounters = data.entry || []
+  
+      encList.innerHTML = ''
+      encounters.forEach(entry => {
+        const enc = entry.resource
+        const type = enc.type?.[0]?.text || 'Tipo desconocido'
+        const status = enc.status || 'Sin estado'
+        const start = enc.period?.start || 'Sin fecha'
+        const facility = enc.serviceProvider?.display || 'Centro no especificado'
+  
+        const card = document.createElement('div')
+        card.className = 'card'
+        card.innerHTML = `
+          <strong>${type}</strong><br/>
+          Estado: ${status}<br/>
+          Fecha: ${start}<br/>
+          Centro: ${facility}
+        `
+        encList.appendChild(card)
+      })
+  
+      encSection.hidden = false
+    } catch (err) {
+      console.error(err)
+      encSection.hidden = true
+    }
+  }
