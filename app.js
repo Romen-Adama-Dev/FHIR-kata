@@ -1,16 +1,38 @@
 const API_URL = 'https://hapi.fhir.org/baseR4/Patient'
+const list = document.getElementById('patient-list')
+const errorMsg = document.getElementById('error-msg')
+const searchInput = document.getElementById('search-input')
+
+let debounceTimeout
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    clearTimeout(debounceTimeout)
+    loadPatients()
+  }
+})
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(debounceTimeout)
+  debounceTimeout = setTimeout(() => {
+    loadPatients()
+  }, 400)
+})
 
 document.getElementById('load-btn').addEventListener('click', loadPatients)
 
-async function fetchPatients() {
-  const response = await fetch(`${API_URL}?_count=10`)
+async function fetchPatients(name = '') {
+  const url = name 
+    ? `${API_URL}?name=${encodeURIComponent(name)}&_count=10`
+    : `${API_URL}?_count=10`
+
+  const response = await fetch(url)
   if (!response.ok) throw new Error('Error al obtener los pacientes')
   const data = await response.json()
   return data.entry || []
 }
 
 function renderPatientList(patients) {
-  const list = document.getElementById('patient-list')
   list.innerHTML = ''
   patients.forEach(entry => {
     const patient = entry.resource
@@ -24,11 +46,11 @@ function renderPatientList(patients) {
 }
 
 async function loadPatients() {
-  const errorMsg = document.getElementById('error-msg')
   errorMsg.hidden = true
+  const name = searchInput.value.trim()
 
   try {
-    const patients = await fetchPatients()
+    const patients = await fetchPatients(name)
     renderPatientList(patients)
   } catch (error) {
     console.error(error)
