@@ -57,20 +57,25 @@ async function fetchPatientDetail(id) {
 
 // Rendering Functions
 function renderPatientList(patients) {
-    list.innerHTML = '';
+    list.innerHTML = ''
     patients.forEach(entry => {
-        const patient = entry.resource;
-        const name = formatPatientName(patient);
-        const gender = patient.gender || 'N/A';
-        const id = patient.id;
-
-        const li = document.createElement('li');
-        li.textContent = `${name} (${gender}) - ID: ${id}`;
-        li.style.cursor = 'pointer';
-        li.addEventListener('click', () => loadPatientDetail(id));
-        list.appendChild(li);
-    });
-}
+      const patient = entry.resource
+      const name = formatPatientName(patient)
+      const gender = patient.gender || 'N/A'
+      const id = patient.id
+  
+      const tr = document.createElement('tr')
+      tr.style.cursor = 'pointer'
+      tr.addEventListener('click', () => loadPatientDetail(id))
+  
+      tr.innerHTML = `
+        <td data-label="Nombre">${name}</td>
+        <td data-label="Género">${gender}</td>
+        <td data-label="ID">${id}</td>
+      `
+      list.appendChild(tr)
+    })
+  }
 
 function renderPatientDetail(patient) {
     const name = formatPatientName(patient);
@@ -120,17 +125,21 @@ async function loadPatientObservations(patientId) {
         const data = await response.json();
         const observations = data.entry || [];
 
-        obsList.innerHTML = '';
+        obsList.innerHTML = ''
         observations.forEach(entry => {
-            const obs = entry.resource;
-            const code = obs.code?.text || 'Sin descripción';
-            const value = obs.valueQuantity?.value + ' ' + obs.valueQuantity?.unit || 'Sin valor';
-            const date = obs.effectiveDateTime || 'Sin fecha';
+        const obs = entry.resource
+        const code = obs.code?.text || 'Sin descripción'
+        const value = obs.valueQuantity?.value + ' ' + obs.valueQuantity?.unit || 'Sin valor'
+        const date = obs.effectiveDateTime || 'Sin fecha'
 
-            const li = document.createElement('li');
-            li.textContent = `${code} → ${value} (${date})`;
-            obsList.appendChild(li);
-        });
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+            <td data-label="Observación">${code}</td>
+            <td data-label="Valor">${value}</td>
+            <td data-label="Fecha">${date}</td>
+        `
+        obsList.appendChild(tr)
+        })
 
         obsSection.hidden = false;
     } catch (err) {

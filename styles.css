@@ -1,19 +1,40 @@
-body {
-    font-family: sans-serif;
-    padding: 1rem;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
   }
-  
-  button {
-    padding: 0.5rem 1rem;
+
+  tr {
     margin-bottom: 1rem;
-    cursor: pointer;
   }
-  
-  ul {
-    list-style-type: none;
-    padding: 0;
+
+  th {
+    display: none;
   }
-  
-  li {
-    margin-bottom: 0.5rem;
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border: none;
+    border-bottom: 1px solid #ccc;
   }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    margin-right: 1rem;
+  }
+}

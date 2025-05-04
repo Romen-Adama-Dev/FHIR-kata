@@ -11,7 +11,16 @@
     <h1>Pacientes desde FHIR</h1>
     <input type="text" id="search-input" placeholder="Buscar por nombre" />
     <button id="load-btn">Cargar Pacientes</button>
-    <ul id="patient-list"></ul>
+    <table id="patient-list-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Género</th>
+            <th>ID</th>
+          </tr>
+        </thead>
+        <tbody id="patient-list"></tbody>
+      </table>
     <button id="load-more-btn" hidden>Cargar más</button>
     <section id="patient-detail" hidden>
         <h2>Detalle del Paciente</h2>
@@ -20,7 +29,16 @@
     <p id="error-msg" hidden>Error al cargar los pacientes</p>
     <section id="observations" hidden>
         <h2>Observaciones Clínicas</h2>
-        <ul id="observation-list"></ul>
+        <table id="observation-list-table">
+            <thead>
+              <tr>
+                <th>Observación</th>
+                <th>Valor</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="observation-list"></tbody>
+          </table>
     </section>
   </main>
   <script src="app.js"></script>
