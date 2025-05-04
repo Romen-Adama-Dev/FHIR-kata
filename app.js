@@ -11,6 +11,8 @@ const obsSection = document.getElementById('observations')
 const obsList = document.getElementById('observation-list')
 const encSection = document.getElementById('encounters')
 const encList = document.getElementById('encounter-list')
+const condSection = document.getElementById('conditions')
+const condList = document.getElementById('condition-list')
 
 // State
 let debounceTimeout;
@@ -114,8 +116,11 @@ async function loadPatientDetail(id) {
         const patient = await fetchPatientDetail(id);
         renderPatientDetail(patient);
         await loadPatientObservations(id);
-        await loadPatientObservations(id)
-        await loadPatientEncounters(id)
+        await loadPatientObservations(id);
+        await loadPatientEncounters(id);
+        await loadPatientObservations(id);
+        await loadPatientEncounters(id);
+        await loadPatientConditions(id);
     } catch (err) {
         console.error(err);
         detailSection.hidden = true;
@@ -192,5 +197,37 @@ async function loadPatientEncounters(patientId) {
     } catch (err) {
       console.error(err)
       encSection.hidden = true
+    }
+  }
+
+  async function loadPatientConditions(patientId) {
+    try {
+      const response = await fetch(`https://hapi.fhir.org/baseR4/Condition?subject=Patient/${patientId}&_count=10`)
+      if (!response.ok) throw new Error('No se pudieron cargar las condiciones')
+  
+      const data = await response.json()
+      const conditions = data.entry || []
+  
+      condList.innerHTML = ''
+      conditions.forEach(entry => {
+        const cond = entry.resource
+        const code = cond.code?.text || 'Condición no especificada'
+        const status = cond.clinicalStatus?.text || 'Sin estado'
+        const onset = cond.onsetDateTime || 'Fecha desconocida'
+  
+        const card = document.createElement('div')
+        card.className = 'card'
+        card.innerHTML = `
+          <strong>${code}</strong><br/>
+          Estado: ${status}<br/>
+          Inicio: ${onset}
+        `
+        condList.appendChild(card)
+      })
+  
+      condSection.hidden = false
+    } catch (err) {
+      console.error(err)
+      condSection.hidden = true
     }
   }
